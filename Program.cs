@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add DbContext and FlightService to the container
 builder.Services.AddDbContext<FlightDbContext>(options =>
     options.UseInMemoryDatabase("FlightDb"));
 builder.Services.AddScoped<IFlightService, FlightService>();
