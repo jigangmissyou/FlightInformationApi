@@ -49,10 +49,11 @@ public class FlightServiceTests
         var service = new FlightService(context);
 
         // Act
-        var result = await service.GetAllAsync();
+        var (data, totalCount) = await service.GetAllAsync();
 
         // Assert
-        Assert.Equal(2, result.Count());
+        Assert.Equal(2, totalCount);
+        Assert.Equal(2, data.Count());
     }
 
     [Fact]
@@ -469,9 +470,10 @@ public class FlightServiceTests
         using var context = GetDbContext();
         var service = new FlightService(context);
 
-        var result = await service.GetAllAsync();
+        var (data, totalCount) = await service.GetAllAsync();
 
-        Assert.Empty(result);
+        Assert.Empty(data);
+        Assert.Equal(0, totalCount);
     }
 
     [Fact]
@@ -626,6 +628,133 @@ public class FlightServiceTests
         Assert.All(result, f => Assert.Equal("Jetstar", f.Airline));
         Assert.Contains(result, f => f.FlightNumber == "JE135");
         Assert.Contains(result, f => f.FlightNumber == "JE136");
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsPaginatedResults()
+    {
+        // Arrange
+        using var context = GetDbContext();
+
+        // Add 15 flights
+        for (int i = 1; i <= 15; i++)
+        {
+            context.Flights.Add(new Flight
+            {
+                Id = i,
+                FlightNumber = $"FL{i:D3}",
+                Airline = "Test Airline",
+                DepartureAirport = "MEL",
+                ArrivalAirport = "SYD",
+                DepartureTime = DateTime.Now,
+                ArrivalTime = DateTime.Now.AddHours(2),
+                Status = FlightStatus.Scheduled
+            });
+        }
+        await context.SaveChangesAsync();
+
+        var service = new FlightService(context);
+
+        // Act - Get first page with 10 items
+        var (data, totalCount) = await service.GetAllAsync(pageNumber: 1, pageSize: 10);
+
+        // Assert
+        Assert.Equal(15, totalCount);
+        Assert.Equal(10, data.Count());
+        Assert.Equal("FL001", data.First().FlightNumber);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsSecondPage()
+    {
+        // Arrange
+        using var context = GetDbContext();
+
+        for (int i = 1; i <= 15; i++)
+        {
+            context.Flights.Add(new Flight
+            {
+                Id = i,
+                FlightNumber = $"FL{i:D3}",
+                Airline = "Test Airline",
+                DepartureAirport = "MEL",
+                ArrivalAirport = "SYD",
+                DepartureTime = DateTime.Now,
+                ArrivalTime = DateTime.Now.AddHours(2),
+                Status = FlightStatus.Scheduled
+            });
+        }
+        await context.SaveChangesAsync();
+
+        var service = new FlightService(context);
+
+        // Act - Get second page with 10 items
+        var (data, totalCount) = await service.GetAllAsync(pageNumber: 2, pageSize: 10);
+
+        // Assert
+        Assert.Equal(15, totalCount);
+        Assert.Equal(5, data.Count()); // Only 5 items on second page
+        Assert.Equal("FL011", data.First().FlightNumber);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_HandlesInvalidPageNumber()
+    {
+        // Arrange
+        using var context = GetDbContext();
+        context.Flights.Add(new Flight
+        {
+            Id = 1,
+            FlightNumber = "FL001",
+            Airline = "Test Airline",
+            DepartureAirport = "MEL",
+            ArrivalAirport = "SYD",
+            DepartureTime = DateTime.Now,
+            ArrivalTime = DateTime.Now.AddHours(2),
+            Status = FlightStatus.Scheduled
+        });
+        await context.SaveChangesAsync();
+
+        var service = new FlightService(context);
+
+        // Act - Try with invalid page number (0 or negative)
+        var (data, totalCount) = await service.GetAllAsync(pageNumber: 0, pageSize: 10);
+
+        // Assert - Should default to page 1
+        Assert.Equal(1, totalCount);
+        Assert.Single(data);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_EnforcesMaxPageSize()
+    {
+        // Arrange
+        using var context = GetDbContext();
+
+        for (int i = 1; i <= 150; i++)
+        {
+            context.Flights.Add(new Flight
+            {
+                Id = i,
+                FlightNumber = $"FL{i:D3}",
+                Airline = "Test Airline",
+                DepartureAirport = "MEL",
+                ArrivalAirport = "SYD",
+                DepartureTime = DateTime.Now,
+                ArrivalTime = DateTime.Now.AddHours(2),
+                Status = FlightStatus.Scheduled
+            });
+        }
+        await context.SaveChangesAsync();
+
+        var service = new FlightService(context);
+
+        // Act - Try with page size > 100 (should be capped at 100)
+        var (data, totalCount) = await service.GetAllAsync(pageNumber: 1, pageSize: 200);
+
+        // Assert - Should return max 100 items
+        Assert.Equal(150, totalCount);
+        Assert.Equal(100, data.Count());
     }
 }
 

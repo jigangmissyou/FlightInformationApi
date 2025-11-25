@@ -14,10 +14,26 @@ public class FlightService : IFlightService
         _context = context;
     }
 
-    public async Task<IEnumerable<FlightDto>> GetAllAsync()
+    public async Task<(IEnumerable<FlightDto> Data, int TotalCount)> GetAllAsync(int pageNumber = 1, int pageSize = 10)
     {
-        var flights = await _context.Flights.ToListAsync();
-        return flights.Select(f => MapToDto(f));
+        // Validate pagination parameters
+        if (pageNumber < 1) pageNumber = 1;
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 100) pageSize = 100; // Max page size limit
+
+        // Get total count
+        var totalCount = await _context.Flights.CountAsync();
+
+        // Get paginated data
+        var flights = await _context.Flights
+            .OrderBy(f => f.Id) // Ensure consistent ordering
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        var flightDtos = flights.Select(f => MapToDto(f));
+
+        return (flightDtos, totalCount);
     }
 
     public async Task<FlightDto?> GetByIdAsync(int id)

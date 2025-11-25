@@ -5,7 +5,7 @@ namespace FlightInformationApi.Services;
 
 public interface IFlightService
 {
-    Task<IEnumerable<FlightDto>> GetAllAsync();
+    Task<(IEnumerable<FlightDto> Data, int TotalCount)> GetAllAsync(int pageNumber = 1, int pageSize = 10);
     Task<FlightDto?> GetByIdAsync(int id);
     Task<FlightDto> CreateAsync(CreateFlightDto flightDto);
     Task UpdateAsync(int id, UpdateFlightDto flightDto);

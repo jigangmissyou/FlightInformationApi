@@ -24,14 +24,16 @@ public class FlightsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets all flights.
+    /// Gets all flights with pagination.
     /// </summary>
-    /// <returns>A list of flights wrapped in an API response.</returns>
+    /// <param name="pageNumber">Page number (default: 1).</param>
+    /// <param name="pageSize">Number of items per page (default: 10, max: 100).</param>
+    /// <returns>A paginated list of flights.</returns>
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IEnumerable<FlightDto>>>> GetAll()
+    public async Task<ActionResult<PaginatedResponse<FlightDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var flights = await _flightService.GetAllAsync();
-        var response = new ApiResponse<IEnumerable<FlightDto>>(flights);
+        var (data, totalCount) = await _flightService.GetAllAsync(pageNumber, pageSize);
+        var response = new PaginatedResponse<FlightDto>(data, totalCount, pageNumber, pageSize);
         return Ok(response);
     }
 

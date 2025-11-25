@@ -19,22 +19,23 @@ namespace FlightInformationApi.Tests.Controllers
         }
 
         [Fact]
-        public async Task GetAll_ReturnsOkResult_WithListOfFlights()
+        public async Task GetAll_ReturnsOkResult_WithPaginatedFlights()
         {
             // Arrange
             var flights = new List<FlightDto>
             {
                 new FlightDto { Id = 1, FlightNumber = "AI101", Airline = "Air New Zealand" }
             };
-            _mockFlightService.Setup(s => s.GetAllAsync()).ReturnsAsync(flights);
+            _mockFlightService.Setup(s => s.GetAllAsync(1, 10)).ReturnsAsync((flights, 1));
 
             // Act
             var result = await _controller.GetAll();
 
             // Assert
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var response = Assert.IsType<ApiResponse<IEnumerable<FlightDto>>>(ok.Value);
+            var response = Assert.IsType<PaginatedResponse<FlightDto>>(ok.Value);
             Assert.True(response.Success);
+            Assert.Equal(1, response.TotalCount);
             Assert.Single(response.Data);
         }
 
@@ -192,4 +193,3 @@ namespace FlightInformationApi.Tests.Controllers
         }
     }
 }
-
