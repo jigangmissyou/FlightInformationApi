@@ -33,13 +33,13 @@ cd FlightInformationApi
 dotnet run
 ```
 
-The API will start and listen on `http://localhost:5247` (or similar, check the console output).
+The API will start and listen on `https://localhost:7087` (or similar, check the console output).
 
 ### 3. Explore the API
 
 Once running, you can access the Swagger UI to explore and test the endpoints:
 
-- **Swagger UI**: [http://localhost:5247/swagger](http://localhost:5247/swagger)
+- **Swagger UI**: [https://localhost:7087/swagger](https://localhost:7087/swagger)
 
 ## Running Tests
 
