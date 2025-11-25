@@ -26,39 +26,44 @@ public class FlightsController : ControllerBase
     /// <summary>
     /// Gets all flights.
     /// </summary>
-    /// <returns>A list of flights.</returns>
+    /// <returns>A list of flights wrapped in an API response.</returns>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<FlightDto>>> GetAll()
+    public async Task<ActionResult<ApiResponse<IEnumerable<FlightDto>>>> GetAll()
     {
-        return Ok(await _flightService.GetAllAsync());
+        var flights = await _flightService.GetAllAsync();
+        var response = new ApiResponse<IEnumerable<FlightDto>>(flights);
+        return Ok(response);
     }
 
     /// <summary>
     /// Gets a flight by its ID.
     /// </summary>
     /// <param name="id">The flight ID.</param>
-    /// <returns>The flight with the specified ID.</returns>
+    /// <returns>The flight with the specified ID wrapped in an API response.</returns>
     [HttpGet("{id}")]
-    public async Task<ActionResult<FlightDto>> GetById(int id)
+    public async Task<ActionResult<ApiSingleResponse<FlightDto>>> GetById(int id)
     {
         var flight = await _flightService.GetByIdAsync(id);
         if (flight == null)
         {
-            return NotFound();
+            var errorResponse = new ApiSingleResponse<FlightDto>(null, false, "Flight not found");
+            return NotFound(errorResponse);
         }
-        return Ok(flight);
+        var response = new ApiSingleResponse<FlightDto>(flight);
+        return Ok(response);
     }
 
     /// <summary>
     /// Creates a new flight.
     /// </summary>
     /// <param name="flightDto">The flight creation data.</param>
-    /// <returns>The created flight.</returns>
+    /// <returns>The created flight wrapped in an API response.</returns>
     [HttpPost]
-    public async Task<ActionResult<FlightDto>> Create(CreateFlightDto flightDto)
+    public async Task<ActionResult<ApiSingleResponse<FlightDto>>> Create(CreateFlightDto flightDto)
     {
         var createdFlight = await _flightService.CreateAsync(flightDto);
-        return CreatedAtAction(nameof(GetById), new { id = createdFlight.Id }, createdFlight);
+        var response = new ApiSingleResponse<FlightDto>(createdFlight, true, "Flight created successfully");
+        return CreatedAtAction(nameof(GetById), new { id = createdFlight.Id }, response);
     }
 
     /// <summary>
@@ -66,36 +71,40 @@ public class FlightsController : ControllerBase
     /// </summary>
     /// <param name="id">The flight ID.</param>
     /// <param name="flightDto">The flight update data.</param>
-    /// <returns>No content.</returns>
+    /// <returns>API response indicating success or failure.</returns>
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, UpdateFlightDto flightDto)
+    public async Task<ActionResult<ApiSingleResponse<object>>> Update(int id, UpdateFlightDto flightDto)
     {
         var existingFlight = await _flightService.GetByIdAsync(id);
         if (existingFlight == null)
         {
-            return NotFound();
+            var errorResponse = new ApiSingleResponse<object>(null, false, "Flight not found");
+            return NotFound(errorResponse);
         }
 
         await _flightService.UpdateAsync(id, flightDto);
-        return NoContent();
+        var response = new ApiSingleResponse<object>(null, true, "Flight updated successfully");
+        return Ok(response);
     }
 
     /// <summary>
     /// Deletes a flight.
     /// </summary>
     /// <param name="id">The flight ID.</param>
-    /// <returns>No content.</returns>
+    /// <returns>API response indicating success or failure.</returns>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<ActionResult<ApiSingleResponse<object>>> Delete(int id)
     {
         var existingFlight = await _flightService.GetByIdAsync(id);
         if (existingFlight == null)
         {
-            return NotFound();
+            var errorResponse = new ApiSingleResponse<object>(null, false, "Flight not found");
+            return NotFound(errorResponse);
         }
 
         await _flightService.DeleteAsync(id);
-        return NoContent();
+        var response = new ApiSingleResponse<object>(null, true, "Flight deleted successfully");
+        return Ok(response);
     }
 
     /// <summary>
@@ -105,10 +114,12 @@ public class FlightsController : ControllerBase
     /// <param name="departureAirport">The departure airport (optional).</param>
     /// <param name="arrivalAirport">The arrival airport (optional).</param>
     /// <param name="date">The flight date (optional).</param>
-    /// <returns>A list of matching flights.</returns>
+    /// <returns>A list of matching flights wrapped in an API response.</returns>
     [HttpGet("search")]
-    public async Task<ActionResult<IEnumerable<FlightDto>>> Search([FromQuery] string? airline, [FromQuery] string? departureAirport, [FromQuery] string? arrivalAirport, [FromQuery] DateTime? date)
+    public async Task<ActionResult<ApiResponse<IEnumerable<FlightDto>>>> Search([FromQuery] string? airline, [FromQuery] string? departureAirport, [FromQuery] string? arrivalAirport, [FromQuery] DateTime? date)
     {
-        return Ok(await _flightService.SearchAsync(airline, departureAirport, arrivalAirport, date));
+        var flights = await _flightService.SearchAsync(airline, departureAirport, arrivalAirport, date);
+        var response = new ApiResponse<IEnumerable<FlightDto>>(flights);
+        return Ok(response);
     }
 }
