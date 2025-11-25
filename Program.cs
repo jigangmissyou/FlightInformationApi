@@ -1,13 +1,24 @@
 using FlightInformationApi.Data;
-using FlightInformationApi.Models;
 using FlightInformationApi.Services;
 using FlightInformationApi.Infrastructure;
+using FlightInformationApi.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Customise validation error response format
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var response = ApiValidationErrorResponse.FromModelState(context.ModelState);
+            return new BadRequestObjectResult(response);
+        };
+    });
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -23,6 +34,7 @@ builder.Services.AddDbContext<FlightDbContext>(options =>
 builder.Services.AddScoped<IFlightService, FlightService>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
