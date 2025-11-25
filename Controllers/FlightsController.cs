@@ -8,20 +8,12 @@ namespace FlightInformationApi.Controllers;
 /// <summary>
 /// Manages flight information operations.
 /// </summary>
+/// <param name="flightService">The flight service.</param>
 [ApiController]
 [Route("api/[controller]")]
-public class FlightsController : ControllerBase
+public class FlightsController(IFlightService flightService) : ControllerBase
 {
-    private readonly IFlightService _flightService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="FlightsController"/> class.
-    /// </summary>
-    /// <param name="flightService">The flight service.</param>
-    public FlightsController(IFlightService flightService)
-    {
-        _flightService = flightService;
-    }
+    private readonly IFlightService _flightService = flightService;
 
     /// <summary>
     /// Gets all flights with pagination.

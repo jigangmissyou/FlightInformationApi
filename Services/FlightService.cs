@@ -5,14 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlightInformationApi.Services;
 
-public class FlightService : IFlightService
+public class FlightService(FlightDbContext context) : IFlightService
 {
-    private readonly FlightDbContext _context;
-
-    public FlightService(FlightDbContext context)
-    {
-        _context = context;
-    }
+    private readonly FlightDbContext _context = context;
 
     public async Task<(IEnumerable<FlightDto> Data, int TotalCount)> GetAllAsync(int pageNumber = 1, int pageSize = 10)
     {
