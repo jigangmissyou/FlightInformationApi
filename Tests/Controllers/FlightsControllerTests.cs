@@ -148,10 +148,10 @@ namespace FlightInformationApi.Tests.Controllers
             };
 
             _mockFlightService
-                .Setup(s => s.SearchAsync("Air New Zealand", null, null, null))
+                .Setup(s => s.SearchAsync("Air New Zealand", null, null, null, null, null))
                 .ReturnsAsync(flights);
 
-            var result = await _controller.Search("Air New Zealand", null, null, null);
+            var result = await _controller.Search("Air New Zealand", null, null, null, null, null);
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             var response = Assert.IsType<ApiResponse<IEnumerable<FlightDto>>>(ok.Value);
@@ -177,10 +177,10 @@ namespace FlightInformationApi.Tests.Controllers
             var date = new DateTime(2025, 6, 20);
 
             _mockFlightService
-                .Setup(s => s.SearchAsync("Virgin Australia", "NPE", "DXB", date))
+                .Setup(s => s.SearchAsync("Virgin Australia", "NPE", "DXB", date, null, null))
                 .ReturnsAsync(flights);
 
-            var result = await _controller.Search("Virgin Australia", "NPE", "DXB", date);
+            var result = await _controller.Search("Virgin Australia", "NPE", "DXB", date, null, null);
 
             var ok = Assert.IsType<OkObjectResult>(result.Result);
             var response = Assert.IsType<ApiResponse<IEnumerable<FlightDto>>>(ok.Value);

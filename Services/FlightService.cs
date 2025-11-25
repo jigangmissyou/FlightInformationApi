@@ -71,9 +71,9 @@ public class FlightService : IFlightService
         }
     }
 
-    public async Task<IEnumerable<FlightDto>> SearchAsync(string? airline, string? departureAirport, string? arrivalAirport, DateTime? date)
+    public async Task<IEnumerable<FlightDto>> SearchAsync(string? airline, string? departureAirport, string? arrivalAirport, DateTime? date, DateTime? startDate, DateTime? endDate)
     {
-        // Start with a queryable source so conditions can be chanined dynamically
+        // Start with a queryable source so conditions can be chained dynamically
         var query = _context.Flights.AsQueryable();
 
         if (!string.IsNullOrEmpty(airline))
@@ -92,8 +92,18 @@ public class FlightService : IFlightService
             query = query.Where(f => f.ArrivalAirport.Contains(arrivalAirport, StringComparison.OrdinalIgnoreCase));
         }
 
-        if (date.HasValue)
+        // Date filtering: support both single date and date range
+        if (startDate.HasValue && endDate.HasValue)
         {
+            // Date range search
+            query = query.Where(f =>
+                f.DepartureTime.Date >= startDate.Value.Date &&
+                f.DepartureTime.Date <= endDate.Value.Date
+            );
+        }
+        else if (date.HasValue)
+        {
+            // Single date search (backward compatibility)
             query = query.Where(f => f.DepartureTime.Date == date.Value.Date);
         }
 

@@ -113,12 +113,20 @@ public class FlightsController : ControllerBase
     /// <param name="airline">The airline name (optional).</param>
     /// <param name="departureAirport">The departure airport (optional).</param>
     /// <param name="arrivalAirport">The arrival airport (optional).</param>
-    /// <param name="date">The flight date (optional).</param>
+    /// <param name="date">The flight date (optional, for single date search).</param>
+    /// <param name="startDate">The start date for date range search (optional).</param>
+    /// <param name="endDate">The end date for date range search (optional).</param>
     /// <returns>A list of matching flights wrapped in an API response.</returns>
     [HttpGet("search")]
-    public async Task<ActionResult<ApiResponse<IEnumerable<FlightDto>>>> Search([FromQuery] string? airline, [FromQuery] string? departureAirport, [FromQuery] string? arrivalAirport, [FromQuery] DateTime? date)
+    public async Task<ActionResult<ApiResponse<IEnumerable<FlightDto>>>> Search(
+        [FromQuery] string? airline,
+        [FromQuery] string? departureAirport,
+        [FromQuery] string? arrivalAirport,
+        [FromQuery] DateTime? date,
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate)
     {
-        var flights = await _flightService.SearchAsync(airline, departureAirport, arrivalAirport, date);
+        var flights = await _flightService.SearchAsync(airline, departureAirport, arrivalAirport, date, startDate, endDate);
         var response = new ApiResponse<IEnumerable<FlightDto>>(flights);
         return Ok(response);
     }

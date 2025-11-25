@@ -10,5 +10,5 @@ public interface IFlightService
     Task<FlightDto> CreateAsync(CreateFlightDto flightDto);
     Task UpdateAsync(int id, UpdateFlightDto flightDto);
     Task DeleteAsync(int id);
-    Task<IEnumerable<FlightDto>> SearchAsync(string? airline, string? departureAirport, string? arrivalAirport, DateTime? date);
+    Task<IEnumerable<FlightDto>> SearchAsync(string? airline, string? departureAirport, string? arrivalAirport, DateTime? date, DateTime? startDate, DateTime? endDate);
 }

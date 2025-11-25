@@ -226,7 +226,7 @@ public class FlightServiceTests
         var service = new FlightService(context);
 
         // Act
-        var result = await service.SearchAsync("Fiji", null, null, null);
+        var result = await service.SearchAsync("Fiji", null, null, null, null, null);
 
         // Assert
         Assert.Single(result);
@@ -265,7 +265,7 @@ public class FlightServiceTests
         var service = new FlightService(context);
 
         // Act
-        var result = await service.SearchAsync(null, "MEL", null, null);
+        var result = await service.SearchAsync(null, "MEL", null, null, null, null);
 
         // Assert
         Assert.Single(result);
@@ -304,7 +304,7 @@ public class FlightServiceTests
         var service = new FlightService(context);
 
         // Act
-        var result = await service.SearchAsync(null, null, "SYD", null);
+        var result = await service.SearchAsync(null, null, "SYD", null, null, null);
 
         // Assert
         Assert.Single(result);
@@ -346,7 +346,7 @@ public class FlightServiceTests
         var service = new FlightService(context);
 
         // Act
-        var result = await service.SearchAsync(null, null, null, today);
+        var result = await service.SearchAsync(null, null, null, today, null, null);
 
         // Assert
         Assert.Single(result);
@@ -397,7 +397,7 @@ public class FlightServiceTests
 
         var service = new FlightService(context);
 
-        var result = await service.SearchAsync("Jetstar", "ZQN", "DXB", today);
+        var result = await service.SearchAsync("Jetstar", "ZQN", "DXB", today, null, null);
 
         Assert.Single(result);
         Assert.Equal("JE121", result.First().FlightNumber);
@@ -424,7 +424,7 @@ public class FlightServiceTests
 
         var service = new FlightService(context);
 
-        var result = await service.SearchAsync("NonExistentAirline", null, null, null);
+        var result = await service.SearchAsync("NonExistentAirline", null, null, null, null, null);
 
         Assert.Empty(result);
     }
@@ -473,4 +473,159 @@ public class FlightServiceTests
 
         Assert.Empty(result);
     }
+
+    [Fact]
+    public async Task SearchAsync_FiltersCorrectly_ByDateRange()
+    {
+        // Arrange
+        using var context = GetDbContext();
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+        var dayAfterTomorrow = today.AddDays(2);
+        var threeDaysLater = today.AddDays(3);
+
+        context.Flights.Add(new Flight
+        {
+            Id = 1,
+            FlightNumber = "AI130",
+            Airline = "Air New Zealand",
+            DepartureAirport = "MEL",
+            ArrivalAirport = "SYD",
+            DepartureTime = today.AddHours(10),
+            ArrivalTime = today.AddHours(12),
+            Status = FlightStatus.Scheduled
+        });
+        context.Flights.Add(new Flight
+        {
+            Id = 2,
+            FlightNumber = "VI131",
+            Airline = "Virgin Australia",
+            DepartureAirport = "MEL",
+            ArrivalAirport = "SYD",
+            DepartureTime = tomorrow.AddHours(14),
+            ArrivalTime = tomorrow.AddHours(16),
+            Status = FlightStatus.Scheduled
+        });
+        context.Flights.Add(new Flight
+        {
+            Id = 3,
+            FlightNumber = "JE132",
+            Airline = "Jetstar",
+            DepartureAirport = "MEL",
+            ArrivalAirport = "SYD",
+            DepartureTime = dayAfterTomorrow.AddHours(8),
+            ArrivalTime = dayAfterTomorrow.AddHours(10),
+            Status = FlightStatus.Scheduled
+        });
+        context.Flights.Add(new Flight
+        {
+            Id = 4,
+            FlightNumber = "QA133",
+            Airline = "Qantas",
+            DepartureAirport = "MEL",
+            ArrivalAirport = "SYD",
+            DepartureTime = threeDaysLater.AddHours(15),
+            ArrivalTime = threeDaysLater.AddHours(17),
+            Status = FlightStatus.Scheduled
+        });
+        await context.SaveChangesAsync();
+
+        var service = new FlightService(context);
+
+        // Act - Search for flights from today to day after tomorrow (3 days)
+        var result = await service.SearchAsync(null, null, null, null, today, dayAfterTomorrow);
+
+        // Assert - Should return 3 flights (today, tomorrow, day after tomorrow)
+        Assert.Equal(3, result.Count());
+        Assert.Contains(result, f => f.FlightNumber == "AI130");
+        Assert.Contains(result, f => f.FlightNumber == "VI131");
+        Assert.Contains(result, f => f.FlightNumber == "JE132");
+        Assert.DoesNotContain(result, f => f.FlightNumber == "QA133");
+    }
+
+    [Fact]
+    public async Task SearchAsync_DateRangeWithSingleDay_ReturnsSameDayFlights()
+    {
+        // Arrange
+        using var context = GetDbContext();
+        var today = DateTime.Today;
+
+        context.Flights.Add(new Flight
+        {
+            Id = 1,
+            FlightNumber = "EM134",
+            Airline = "Emirates",
+            DepartureAirport = "MEL",
+            ArrivalAirport = "DXB",
+            DepartureTime = today.AddHours(10),
+            ArrivalTime = today.AddHours(20),
+            Status = FlightStatus.Scheduled
+        });
+        await context.SaveChangesAsync();
+
+        var service = new FlightService(context);
+
+        // Act - Search with same start and end date
+        var result = await service.SearchAsync(null, null, null, null, today, today);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("EM134", result.First().FlightNumber);
+    }
+
+    [Fact]
+    public async Task SearchAsync_DateRangeWithMultipleCriteria_FiltersCorrectly()
+    {
+        // Arrange
+        using var context = GetDbContext();
+        var today = DateTime.Today;
+        var tomorrow = today.AddDays(1);
+
+        context.Flights.Add(new Flight
+        {
+            Id = 1,
+            FlightNumber = "JE135",
+            Airline = "Jetstar",
+            DepartureAirport = "ZQN",
+            ArrivalAirport = "DXB",
+            DepartureTime = today.AddHours(10),
+            ArrivalTime = today.AddHours(20),
+            Status = FlightStatus.Scheduled
+        });
+        context.Flights.Add(new Flight
+        {
+            Id = 2,
+            FlightNumber = "JE136",
+            Airline = "Jetstar",
+            DepartureAirport = "ZQN",
+            ArrivalAirport = "DXB",
+            DepartureTime = tomorrow.AddHours(10),
+            ArrivalTime = tomorrow.AddHours(20),
+            Status = FlightStatus.Scheduled
+        });
+        context.Flights.Add(new Flight
+        {
+            Id = 3,
+            FlightNumber = "AI137",
+            Airline = "Air New Zealand",
+            DepartureAirport = "ZQN",
+            ArrivalAirport = "DXB",
+            DepartureTime = today.AddHours(12),
+            ArrivalTime = today.AddHours(22),
+            Status = FlightStatus.Scheduled
+        });
+        await context.SaveChangesAsync();
+
+        var service = new FlightService(context);
+
+        // Act - Search for Jetstar flights from ZQN to DXB within date range
+        var result = await service.SearchAsync("Jetstar", "ZQN", "DXB", null, today, tomorrow);
+
+        // Assert - Should return only Jetstar flights
+        Assert.Equal(2, result.Count());
+        Assert.All(result, f => Assert.Equal("Jetstar", f.Airline));
+        Assert.Contains(result, f => f.FlightNumber == "JE135");
+        Assert.Contains(result, f => f.FlightNumber == "JE136");
+    }
 }
+
