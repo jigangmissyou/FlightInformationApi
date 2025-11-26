@@ -2,6 +2,7 @@ using FlightInformationApi.Controllers;
 using FlightInformationApi.DTOs;
 using FlightInformationApi.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -10,12 +11,14 @@ namespace FlightInformationApi.Tests.Controllers
     public class FlightsControllerTests
     {
         private readonly Mock<IFlightService> _mockFlightService;
+        private readonly Mock<ILogger<FlightsController>> _mockLogger;
         private readonly FlightsController _controller;
 
         public FlightsControllerTests()
         {
             _mockFlightService = new Mock<IFlightService>();
-            _controller = new FlightsController(_mockFlightService.Object);
+            _mockLogger = new Mock<ILogger<FlightsController>>();
+            _controller = new FlightsController(_mockFlightService.Object, _mockLogger.Object);
         }
 
         [Fact]

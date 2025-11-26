@@ -3,6 +3,8 @@ using FlightInformationApi.DTOs;
 using FlightInformationApi.Models;
 using FlightInformationApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using Xunit;
 
 namespace FlightInformationApi.Tests.Services;
@@ -46,7 +48,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         var (data, totalCount) = await service.GetAllAsync();
@@ -74,7 +76,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         var result = await service.GetByIdAsync(1);
@@ -90,7 +92,7 @@ public class FlightServiceTests
     {
         // Arrange
         using var context = GetDbContext();
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         var result = await service.GetByIdAsync(999);
@@ -104,7 +106,7 @@ public class FlightServiceTests
     {
         // Arrange
         using var context = GetDbContext();
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
         var createDto = new CreateFlightDto
         {
             FlightNumber = "JE104",
@@ -145,7 +147,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
         var updateDto = new UpdateFlightDto { FlightNumber = "QA105-Updated" };
 
         // Act
@@ -174,7 +176,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         await service.DeleteAsync(1);
@@ -224,7 +226,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         var result = await service.SearchAsync("Fiji", null, null, null, null, null);
@@ -263,7 +265,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         var result = await service.SearchAsync(null, "MEL", null, null, null, null);
@@ -302,7 +304,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         var result = await service.SearchAsync(null, null, "SYD", null, null, null);
@@ -344,7 +346,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act
         var result = await service.SearchAsync(null, null, null, today, null, null);
@@ -396,7 +398,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         var result = await service.SearchAsync("Jetstar", "ZQN", "DXB", today, null, null);
 
@@ -423,7 +425,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         var result = await service.SearchAsync("NonExistentAirline", null, null, null, null, null);
 
@@ -451,7 +453,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
         var updateDto = new UpdateFlightDto { FlightNumber = "EM124-Updated" };
 
         await service.UpdateAsync(1, updateDto);
@@ -468,7 +470,7 @@ public class FlightServiceTests
     public async Task GetAllAsync_ReturnsEmpty_WhenDatabaseEmpty()
     {
         using var context = GetDbContext();
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         var (data, totalCount) = await service.GetAllAsync();
 
@@ -532,7 +534,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act - Search for flights from today to day after tomorrow (3 days)
         var result = await service.SearchAsync(null, null, null, null, today, dayAfterTomorrow);
@@ -565,7 +567,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act - Search with same start and end date
         var result = await service.SearchAsync(null, null, null, null, today, today);
@@ -618,7 +620,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act - Search for Jetstar flights from ZQN to DXB within date range
         var result = await service.SearchAsync("Jetstar", "ZQN", "DXB", null, today, tomorrow);
@@ -653,7 +655,7 @@ public class FlightServiceTests
         }
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act - Get first page with 10 items
         var (data, totalCount) = await service.GetAllAsync(pageNumber: 1, pageSize: 10);
@@ -686,7 +688,7 @@ public class FlightServiceTests
         }
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act - Get second page with 10 items
         var (data, totalCount) = await service.GetAllAsync(pageNumber: 2, pageSize: 10);
@@ -715,7 +717,7 @@ public class FlightServiceTests
         });
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act - Try with invalid page number (0 or negative)
         var (data, totalCount) = await service.GetAllAsync(pageNumber: 0, pageSize: 10);
@@ -747,7 +749,7 @@ public class FlightServiceTests
         }
         await context.SaveChangesAsync();
 
-        var service = new FlightService(context);
+        var service = new FlightService(context, new Mock<ILogger<FlightService>>().Object);
 
         // Act - Try with page size > 100 (should be capped at 100)
         var (data, totalCount) = await service.GetAllAsync(pageNumber: 1, pageSize: 200);

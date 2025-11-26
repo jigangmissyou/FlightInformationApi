@@ -5,9 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FlightInformationApi.Services;
 
-public class FlightService(FlightDbContext context) : IFlightService
+public class FlightService(FlightDbContext context, ILogger<FlightService> logger) : IFlightService
 {
     private readonly FlightDbContext _context = context;
+    private readonly ILogger<FlightService> _logger = logger;
 
     public async Task<(IEnumerable<FlightDto> Data, int TotalCount)> GetAllAsync(int pageNumber = 1, int pageSize = 10)
     {
@@ -50,6 +51,9 @@ public class FlightService(FlightDbContext context) : IFlightService
             Status = flightDto.Status
         };
 
+
+
+        _logger.LogInformation("Adding flight {FlightNumber} to database", flight.FlightNumber);
         _context.Flights.Add(flight);
         await _context.SaveChangesAsync();
 
@@ -69,6 +73,9 @@ public class FlightService(FlightDbContext context) : IFlightService
         if (flightDto.ArrivalTime.HasValue) existingFlight.ArrivalTime = flightDto.ArrivalTime.Value;
         if (flightDto.Status.HasValue) existingFlight.Status = flightDto.Status.Value;
 
+
+
+        _logger.LogInformation("Saving updates for flight {Id}", id);
         await _context.SaveChangesAsync();
     }
 
@@ -77,6 +84,7 @@ public class FlightService(FlightDbContext context) : IFlightService
         var flight = await _context.Flights.FirstOrDefaultAsync(f => f.Id == id);
         if (flight != null)
         {
+            _logger.LogInformation("Removing flight {Id} from database", id);
             _context.Flights.Remove(flight);
             await _context.SaveChangesAsync();
         }

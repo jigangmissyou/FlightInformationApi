@@ -11,9 +11,10 @@ namespace FlightInformationApi.Controllers;
 /// <param name="flightService">The flight service.</param>
 [ApiController]
 [Route("api/[controller]")]
-public class FlightsController(IFlightService flightService) : ControllerBase
+public class FlightsController(IFlightService flightService, ILogger<FlightsController> logger) : ControllerBase
 {
     private readonly IFlightService _flightService = flightService;
+    private readonly ILogger<FlightsController> _logger = logger;
 
     /// <summary>
     /// Gets all flights with pagination.
@@ -24,6 +25,7 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<PaginatedResponse<FlightDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
+        _logger.LogInformation("Getting flights. Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
         var (data, totalCount) = await _flightService.GetAllAsync(pageNumber, pageSize);
         var response = new PaginatedResponse<FlightDto>(data, totalCount, pageNumber, pageSize);
         return Ok(response);
@@ -40,6 +42,7 @@ public class FlightsController(IFlightService flightService) : ControllerBase
         var flight = await _flightService.GetByIdAsync(id);
         if (flight == null)
         {
+            _logger.LogWarning("Flight with ID {Id} not found", id);
             var errorResponse = new ApiSingleResponse<FlightDto>(null, false, "Flight not found");
             return NotFound(errorResponse);
         }
@@ -55,6 +58,7 @@ public class FlightsController(IFlightService flightService) : ControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiSingleResponse<FlightDto>>> Create(CreateFlightDto flightDto)
     {
+        _logger.LogInformation("Creating new flight: {FlightNumber}", flightDto.FlightNumber);
         var createdFlight = await _flightService.CreateAsync(flightDto);
         var response = new ApiSingleResponse<FlightDto>(createdFlight, true, "Flight created successfully");
         return CreatedAtAction(nameof(GetById), new { id = createdFlight.Id }, response);
@@ -120,6 +124,7 @@ public class FlightsController(IFlightService flightService) : ControllerBase
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate)
     {
+        _logger.LogInformation("Searching flights. Airline: {Airline}, Dep: {Dep}, Arr: {Arr}", airline, departureAirport, arrivalAirport);
         var flights = await _flightService.SearchAsync(airline, departureAirport, arrivalAirport, date, startDate, endDate);
         var response = new ApiResponse<IEnumerable<FlightDto>>(flights);
         return Ok(response);
