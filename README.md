@@ -43,19 +43,50 @@ Once running, you can access the Swagger UI to explore and test the endpoints:
 
 ## Running Tests
 
-The project includes a comprehensive suite of unit tests covering controllers and services.
+The project includes a comprehensive suite of **46 unit tests** covering controllers, services, DTOs, and infrastructure components.
 
-To run all tests:
+### Test Coverage
+
+- **Line Coverage**: 87.8%
+- **Branch Coverage**: 79.3%
+- **Test Files**: 5 test classes with 46 tests total
+
+### Run All Tests
 
 ```bash
 dotnet test
 ```
 
-To run tests with detailed output:
+### Run Tests with Detailed Output
 
 ```bash
 dotnet test --logger "console;verbosity=detailed"
 ```
+
+### Generate Code Coverage Report
+
+To generate a code coverage report:
+
+```bash
+# Run tests with coverage collection
+dotnet test --settings coverlet.runsettings
+
+# Generate HTML report (requires dotnet-reportgenerator-globaltool)
+dotnet tool install -g dotnet-reportgenerator-globaltool
+reportgenerator -reports:"TestResults\**\coverage.cobertura.xml" -targetdir:"TestResults\CoverageReport" -reporttypes:Html
+```
+
+View the coverage report by opening `TestResults\CoverageReport\index.html` in your browser.
+
+### Test Structure
+
+- **Controllers Tests**: `FlightsControllerTests` - Tests for API endpoints
+- **Services Tests**: `FlightServiceTests` - Tests for business logic
+- **DTOs Tests**: 
+  - `ApiValidationErrorResponseTests` - Validation error formatting
+  - `PaginatedResponseTests` - Pagination logic
+- **Infrastructure Tests**: `GlobalExceptionHandlerTests` - Exception handling
+
 
 ## API Endpoints
 
