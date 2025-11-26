@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics;
+using FlightInformationApi.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlightInformationApi.Infrastructure;
@@ -19,16 +20,11 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         _logger.LogError(exception, "An unhandled exception has occurred.");
 
-        var problemDetails = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "An error occurred while processing your request.",
-            Detail = exception.Message 
-        };
+        var response = new ApiSingleResponse<object>(null, false, exception.Message);
 
-        httpContext.Response.StatusCode = problemDetails.Status.Value;
+        httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
 
         return true;
     }
